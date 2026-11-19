@@ -75,6 +75,7 @@
         var th = st.get().angle * Math.PI / 180, off = st.get().offset;
         var nx = Math.cos(th), ny = Math.sin(th), c = -off;
         var correct = 0;
+        K.clipPlot(ctx, pad, w, h);
         pts.forEach(function (p) {
           var side = nx * p.x + ny * p.y + c > 0 ? 1 : 0;
           if (side === p.c) correct++;
@@ -85,6 +86,7 @@
         var y0 = (-c - nx * x0) / (ny || 1e-6), y1 = (-c - nx * x1) / (ny || 1e-6);
         ctx.strokeStyle = 'oklch(.7 .13 120)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(xs(x0), ys(y0)); ctx.lineTo(xs(x1), ys(y1)); ctx.stroke();
+        ctx.restore();
         note.textContent = 'Accuracy ' + Math.round(correct / pts.length * 100) + '%. The line is w·x + b = 0. The angle sets the normal, the offset moves it.';
       }
     }

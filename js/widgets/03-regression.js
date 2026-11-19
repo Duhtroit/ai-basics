@@ -47,6 +47,7 @@
         var xs = K.scale(0, 9, pad.l, w - pad.r), ys = K.scale(0, 1100, h - pad.b, pad.t);
         axes(ctx, w, h, pad);
         var p = st.get(), sse = 0;
+        K.clipPlot(ctx, pad, w, h);
         ctx.strokeStyle = 'rgba(237,232,221,.2)'; ctx.lineWidth = 1;
         pts.forEach(function (pt) {
           var pred = p.w * pt.x + p.b;
@@ -57,6 +58,7 @@
         });
         ctx.strokeStyle = 'oklch(.7 .13 90)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(xs(0), ys(p.b)); ctx.lineTo(xs(9), ys(p.w * 9 + p.b)); ctx.stroke();
+        ctx.restore();
         ctx.fillStyle = 'rgba(145,141,132,.95)'; ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
         ctx.fillText('hours', w - pad.r - 34, h - 8);
         ctx.fillText('income', 6, pad.t + 4);
@@ -81,6 +83,7 @@
         var xs = K.scale(0, 9, pad.l, w - pad.r), ys = K.scale(0, 1100, h - pad.b, pad.t);
         axes(ctx, w, h, pad);
         var idx = frame;
+        K.clipPlot(ctx, pad, w, h);
         ctx.strokeStyle = 'oklch(.7 .13 90)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(xs(0), ys(200)); ctx.lineTo(xs(9), ys(1100)); ctx.stroke();
         pts.forEach(function (pt, i) {
@@ -94,6 +97,7 @@
           ctx.fillStyle = active ? '#EDE8DD' : 'rgba(145,141,132,.5)';
           ctx.beginPath(); ctx.arc(xs(pt.x), ys(pt.y), active ? 3.6 : 2.6, 0, Math.PI * 2); ctx.fill();
         });
+        ctx.restore();
         var p = pts[idx], r = p.y - (100 * p.x + 200);
         note.textContent = 'Residual ' + r.toFixed(0) + '. Squaring turns it into ' + Math.round(r * r).toLocaleString() + ', which is what least squares minimises.';
       }
@@ -133,6 +137,7 @@
         var xs = K.scale(0, 9 * factor, pad.l, w - pad.r), ys = K.scale(0, 1100, h - pad.b, pad.t);
         axes(ctx, w, h, pad);
         var p = st.get(), sse = 0;
+        K.clipPlot(ctx, pad, w, h);
         pts.forEach(function (pt) {
           var pred = p.w * pt.x + p.b;
           sse += Math.pow(pred - pt.y, 2);
@@ -143,6 +148,7 @@
         });
         ctx.strokeStyle = 'oklch(.7 .13 90)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(xs(0), ys(p.b)); ctx.lineTo(xs(9 * factor), ys(p.w * 9 * factor + p.b)); ctx.stroke();
+        ctx.restore();
         ctx.fillStyle = 'rgba(145,141,132,.95)'; ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
         ctx.fillText(st.get().scaled ? 'x scaled by 10' : 'x in original units', pad.l + 4, pad.t + 4);
         note.textContent = 'SSE ' + Math.round(sse).toLocaleString() + '. The exact solution sets the derivative to zero in one step.';
@@ -174,6 +180,7 @@
         var ctx = cv.ctx, w = s.w, h = s.h, pad = { l: 32, r: 20, t: 16, b: 26 };
         var xs = K.scale(0, 6.5, pad.l, w - pad.r), ys = K.scale(0, 6, h - pad.b, pad.t);
         axes(ctx, w, h, pad);
+        K.clipPlot(ctx, pad, w, h);
         ctx.strokeStyle = 'rgba(237,232,221,.35)'; ctx.lineWidth = 1.5;
         ctx.beginPath();
         for (var i = 0; i <= 120; i++) {
@@ -188,6 +195,7 @@
         ctx.strokeStyle = '#EDE8DD'; ctx.lineWidth = 1;
         var dx = 0.9, x2 = p + dx * (slope < 0 ? 1 : -1);
         ctx.beginPath(); ctx.moveTo(xs(p), ys(f(p))); ctx.lineTo(xs(x2), ys(f(x2))); ctx.stroke();
+        ctx.restore();
         note.textContent = 'Position ' + p.toFixed(2) + '. Slope ' + slope.toFixed(2) + '. The step moves against the slope, scaled by the stride.';
       }
     }
@@ -241,6 +249,7 @@
         var ctx = cv.ctx, w = s.w, h = s.h, pad = { l: 34, r: 16, t: 16, b: 28 };
         var xs = K.scale(-0.5, 4.5, pad.l, w - pad.r), ys = K.scale(-1.5, 4.5, h - pad.b, pad.t);
         axes(ctx, w, h, pad);
+        K.clipPlot(ctx, pad, w, h);
         for (var L = 0.2; L <= 8; L += 0.6) {
           ctx.strokeStyle = 'rgba(237,232,221,.12)'; ctx.lineWidth = 1;
           ctx.beginPath();
@@ -258,6 +267,7 @@
         var p = st.get();
         ctx.fillStyle = 'oklch(.72 .14 90)';
         ctx.beginPath(); ctx.arc(xs(p.w), ys(p.b), 5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
         ctx.fillStyle = 'rgba(145,141,132,.95)'; ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
         ctx.fillText('w', w - pad.r - 10, h - 8);
         ctx.fillText('b', 10, pad.t + 2);

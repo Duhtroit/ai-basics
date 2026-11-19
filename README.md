@@ -1,6 +1,6 @@
 # AI Basics, interactive course
 
-A static course built from 49 lecture recordings, 39 slide decks and their transcripts. Eleven units, sixty concepts, sixty playable metaphor scenes, 64 deeper mechanism and sandbox labs, and 11 unit maps. No framework, no runtime build step, no account, no tracking. A generated manifest lets each unit load only its own prose and widgets.
+A static course built from the 49 recordings, 39 slide decks and transcripts of AI Basics. Eleven units, sixty concepts, sixty playable metaphor scenes, 64 deeper mechanism and sandbox labs, and 11 unit maps. Each unit is also a guided lesson: a framing, a full explanation and worked example for every concept, a "your turn" problem with a worked answer, and a closing synthesis. The teaching text is about 49,000 words. No framework, no runtime build step, no account, no tracking. A generated manifest lets each unit load only its own prose, teaching file and widgets.
 
 The approved plan and its scene-led revision are recorded in `PLAN.md`.
 
@@ -35,6 +35,7 @@ js/scenes.js               one themed, playable metaphor scene per concept
 js/widgets/01..11.js       deeper unit interactions, grouped by unit
 js/widgets/connections.js  concept-map exercise
 content/units/01..11.js    prose, metaphor maps, checks, mixed-format tests, pairs, maps
+content/teach/01..11.js    guided lesson: opening, teaching, worked examples, practice, closing
 content/manifest.js        generated unit metadata used by the cover and router
 content/glossary.js        terms and the concept that introduces each
 content/_sources/slides/   extracted slide text used while writing
@@ -44,13 +45,14 @@ scripts/metrics.py         Flesch reading ease and jargon density per unit
 scripts/build_manifest.mjs regenerates content/manifest.js from the unit files
 scripts/measure_size.mjs   gzipped shell, per-unit page and font budget gate
 scripts/smoke.mjs          Playwright gate: mounts every lab, captures screenshots and timings
+scripts/journey.mjs        Playwright gate: lesson chain, deep links, widget artifacts, page column
 scripts/motion.mjs         records one 10-second clip per widget and scene
 artifacts/                 screenshots, frame timings and widget recordings from the gate
 ```
 
 ## Navigation and progress
 
-Routes are hash based: `#/unit/3`, `#/unit/10/c/astar`, `#/review`, `#/exam`. A unit's prose and widget file load on demand, then its widgets mount as they approach the viewport. The cover and rail use `content/manifest.js`; the review queue and exam load all unit content because they draw from every unit.
+Routes are hash based: `#/unit/3`, `#/unit/3/lesson`, `#/unit/3/c/linear-model`, `#/unit/3/close`, `#/review`, `#/exam`. A unit's prose, teaching file and widget file load on demand, then its widgets mount as they approach the viewport. The lesson opens with a framing essay and a toolkit where the unit needs one, then teaches each concept in order. Each concept ends with previous and next lesson links, the first concept links back to the opening, the last links to the synthesis, and the synthesis hands off to the next unit. Unit 11 hands off to the final exam. A direct lesson link scrolls to that section and survives reload. The cover and rail use `content/manifest.js`; the review queue and exam load all unit content because they draw from every unit.
 
 Progress is stored under `aim.progress.v1` in `localStorage`: answered checks, unit test scores, the 1/3/7/16 review queue and the exam result. The cover has **Export progress** and **Import progress** buttons for a JSON file. Nothing leaves the browser.
 
@@ -60,7 +62,9 @@ Each concept is one object in `content/units/NN-*.js` with a fixed set of fields
 
 A unit test has twelve items. Eight use `{ q, options, answer, explain }`. The other four declare a `type`: `numeric` adds a numeric `answer` and `tolerance`; `ordering` adds `items` in the correct order; `error` adds `steps` and the index of the wrong one; `short` adds a `rubric` and a `model` answer. A unit also has a `pairs` array of `{ a, b, claim, same, explain }` for the same-or-different exercise. The linter validates all of them.
 
-After editing a unit, run `node scripts/build_manifest.mjs` to refresh `content/manifest.js`. The linter fails if the manifest and the unit files disagree. Rung 1 is the scene in `js/scenes.js`, keyed by concept id. A scene declares a hue, setting, actor, a small set of props, and a short narrated beat sequence. It renders a pastel scene with its own palette, a draggable actor, a scene-specific action, beat buttons and a play/replay/reset row. The scene replaces the concept's generic first widget; the mechanism and sandbox labs remain. To add a concept, add it to the matching content file and give it a scene and a mapping table. To add a term, add it to `content/glossary.js` at the concept that first introduces it, then run the linter.
+After editing a unit, run `node scripts/build_manifest.mjs` to refresh `content/manifest.js`. The linter fails if the manifest and the unit files disagree. Rung 1 is the scene in `js/scenes.js`, keyed by concept id. A scene declares a hue, setting, actor, a small set of props, and a short narrated beat sequence. It renders a pastel scene with its own palette, a draggable actor, a scene-specific action, beat buttons and a play/replay/reset row. The scene replaces the concept's generic first widget; the mechanism and sandbox labs remain. To add a concept, add it to the matching content file, give it a scene and a mapping table, and add its entry to the unit's teaching file. The manifest generator and lesson navigation derive the sequence from the concept order, so a new concept is linked automatically. To add a term, add it to `content/glossary.js` at the concept that first introduces it, then run the linter.
+
+The teaching layer is separate. Each `content/teach/NN.js` calls `AIM.registerTeach` with an `opening`, an optional `toolkit`, a `concepts` object keyed by concept id, and a `closing`. Every concept entry needs `teach` (at least 180 words of explanation), `work` (a step-by-step worked example), `practice` with a question, optional hint and worked answer, and a one-sentence `bridge` to the next concept. The linter requires one entry per concept in unit order and fails on a missing field or a short teaching block. The renderer inserts the teaching after the scene and mapping, uses `work` in place of the short mechanics example, adds the practice before the knowledge check, and places the closing before the unit test.
 
 ## Checks
 
@@ -77,12 +81,15 @@ npm install --no-audit --no-fund playwright@latest
 npx playwright install chromium ffmpeg
 cd ..
 node scripts/smoke.mjs                     # starts its own server on 8124
+node scripts/journey.mjs                   # chain, deep links and widgets, server on 8125
 node scripts/motion.mjs                    # records all widgets and scenes, about 7 minutes
 ```
 
 `scripts/smoke.mjs` drives Chromium at 1440x900, 1024x768 and 390x844. At each width it visits all eleven units, scrolls every lab into view so the real IntersectionObserver mounts it, and fails on any console error, uncaught exception, failed request, HTTP 4xx/5xx, horizontal overflow, or lab control under 44px. It asserts 135 mounted hosts per width: 60 scenes, 64 deeper mechanism/sandbox labs and 11 concept maps. At 1440 it presses the action in every one of the 60 scenes and requires a beat change, and checks keyboard and drag on a sample. At 390 it exercises the action, Home/ArrowRight and a vertical drag in every scene, audits the portrait viewBox, prop clipping, prop-actor overlap, control ordering and 44px targets, and captures all 60 mobile scenes. It writes 15 viewport screenshots and 120 scene captures, and measures frame timing on `bfs-wave` and `blame-flow` while stepping them every animation frame. It also checks scene state restoration after navigation, reset and play. After the viewport passes it starts every unit test, answers all 12 items through the real controls, requires 12 of 12 correct, and grades all three same-or-different pairs in every unit. A reduced-motion pass requires play to jump straight to the final frame with its numeric trace, and a persistence pass requires the search and backprop widgets to restore their step after navigation and reset. The run fails on any cross-origin request and requires exactly three local woff2 files. `scripts/motion.mjs` records one 10-second WebM per widget and per scene configuration at 960x600.
 
-The linter checks that every prerequisite points backwards, every glossary term is introduced before use, every formula symbol appears in its symbol table, every referenced widget is registered, every concept has exactly one scene and no scene is orphaned, every local asset exists, and that no em dash, curly quote or listed filler phrase remains in the prose.
+`scripts/journey.mjs` is the navigation gate. It starts on the cover, clicks the call to action, opens Unit 1's contents, then follows only the in-page forward links: the opening lesson, every concept in order, the synthesis, and the next unit's opening, through Unit 11 and on to the exam. It compares each step with the expected chain, so a dead end, a skipped concept or a link pointing at the wrong lesson fails the run, and it requires every landed anchor to sit below the sticky header. It then reloads all 82 lesson, concept and synthesis deep links at 1440 and at 390 and checks the same landing. Finally it mounts every lab, presses every control and moves every slider, and fails if a label leaves its drawing, two labels collide, text is clipped, ink crosses a canvas frame, the card changes width, or a control drops under 44px. It also asserts that every reading surface on a page shares one column edge. It writes `artifacts/journey.json`.
+
+The linter checks that every prerequisite points backwards, every glossary term is introduced before use in the reference prose, every formula symbol appears in its symbol table, every referenced widget is registered, every concept has exactly one scene and no scene is orphaned, every local asset exists, every concept has a complete guided teaching entry, and that no em dash, curly quote or listed filler phrase remains in the prose.
 
 ## Verification artifacts
 

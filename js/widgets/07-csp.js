@@ -4,12 +4,12 @@
   var K = AIM.kit, el = K.el, svg = K.svg;
 
   var REGIONS = [
-    { id: 0, pts: '0,0 48,0 48,38 0,38', label: 'A' },
-    { id: 1, pts: '48,0 100,0 100,38 48,38', label: 'B' },
-    { id: 2, pts: '0,38 34,38 34,70 0,70', label: 'C' },
-    { id: 3, pts: '34,38 66,38 66,70 34,70', label: 'D' },
-    { id: 4, pts: '66,38 100,38 100,70 66,70', label: 'E' },
-    { id: 5, pts: '0,70 100,70 100,100 0,100', label: 'F' }
+    { id: 0, pts: '0,0 48,0 48,38 0,38', label: 'A', cx: 24, cy: 19 },
+    { id: 1, pts: '48,0 100,0 100,38 48,38', label: 'B', cx: 74, cy: 19 },
+    { id: 2, pts: '0,38 34,38 34,70 0,70', label: 'C', cx: 17, cy: 54 },
+    { id: 3, pts: '34,38 66,38 66,70 34,70', label: 'D', cx: 50, cy: 54 },
+    { id: 4, pts: '66,38 100,38 100,70 66,70', label: 'E', cx: 83, cy: 54 },
+    { id: 5, pts: '0,70 100,70 100,100 0,100', label: 'F', cx: 50, cy: 85 }
   ];
   var EDGES = [[0, 1], [0, 2], [0, 3], [1, 3], [1, 4], [2, 3], [2, 5], [3, 4], [3, 5], [4, 5]];
   var COLOURS = ['oklch(.62 .12 35)', 'oklch(.62 .12 150)', 'oklch(.62 .12 250)', 'oklch(.62 .12 320)'];
@@ -68,7 +68,7 @@
             st.set({ assign: next, colour: st.get().colour }); draw();
           });
           root.appendChild(poly);
-          root.appendChild(svg('text', { x: 8 + (r.id === 1 || r.id === 4 ? 42 : r.id === 3 ? 18 : 8), y: 22 + (r.id >= 2 ? 4 : 0), fill: a[r.id] >= 0 ? '#0E1116' : 'rgba(237,232,221,.7)', 'font-family': 'IBM Plex Mono, monospace', 'font-size': '8' }, r.label));
+          root.appendChild(svg('text', { x: r.cx, y: r.cy + 3, 'text-anchor': 'middle', fill: a[r.id] >= 0 ? '#0E1116' : 'rgba(237,232,221,.7)', 'font-family': 'IBM Plex Mono, monospace', 'font-size': '9' }, r.label));
         });
         bad.forEach(function (e) {
           var a1 = REGIONS[e[0]], a2 = REGIONS[e[1]];

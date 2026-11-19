@@ -212,6 +212,7 @@
         }
 
         var p = st.get();
+        K.clipPlot(ctx, pad, w, h);
         ctx.strokeStyle = 'oklch(.72 .13 120)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(xs(-3), ys(p.w * -3 + p.b)); ctx.lineTo(xs(3), ys(p.w * 3 + p.b)); ctx.stroke();
         var correct = 0;
@@ -221,6 +222,7 @@
           ctx.fillStyle = pt.c === 1 ? '#EDE8DD' : 'rgba(145,141,132,.85)';
           ctx.beginPath(); ctx.arc(xs(pt.x), ys(pt.y), 3.2, 0, Math.PI * 2); ctx.fill();
         });
+        ctx.restore();
         ctx.fillStyle = 'rgba(237,232,221,.7)';
         ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
         ctx.fillText('y = ' + p.w.toFixed(1) + 'x + ' + p.b.toFixed(1), pad.l + 4, pad.t + 4);

@@ -24,13 +24,17 @@ def syllables(word):
     return max(1, count)
 
 
-def prose(c):
+def prose(c, entry=None):
     parts = [c.get("usecase", ""), c.get("breaks", "")]
     m = c.get("metaphor", {})
     parts += [m.get("claim", ""), m.get("lab", {}).get("tryText", ""), m.get("lab", {}).get("notice", "")]
     parts.append(c.get("idea", ""))
     parts.append(c.get("mechanics", {}).get("worked", ""))
     parts.append(c.get("now", ""))
+    if entry:
+        parts += [entry.get("teach", ""), entry.get("work", ""), entry.get("bridge", "")]
+        practice = entry.get("practice", {})
+        parts += [practice.get("q", ""), practice.get("a", ""), practice.get("answer", "")]
     text = " ".join(parts)
     text = re.sub(r"<[^>]+>", " ", text)
     return re.sub(r"\s+", " ", text).strip()
@@ -40,13 +44,20 @@ def main():
     data = json.loads(subprocess.run(
         ["node", os.path.join(ROOT, "scripts", "extract_units.mjs"), ROOT],
         capture_output=True, text=True, check=True).stdout)
+    lessons = {lesson["n"]: lesson for lesson in json.loads(subprocess.run(
+        ["node", os.path.join(ROOT, "scripts", "extract_teach.mjs")],
+        capture_output=True, text=True, check=True).stdout)["lessons"]}
     terms = {k.lower() for k in data["glossary"]}
     pattern = re.compile(r"(?<![\w-])(" + "|".join(re.escape(t) for t in sorted(terms, key=len, reverse=True)) + r")(?:s|es)?(?![\w-])", re.I)
     print("| Unit | Concepts | Words | Flesch | Jargon per 100 words |")
     print("|---|---|---|---|---|")
     total_words = 0
     for u in sorted(data["units"], key=lambda x: x["n"]):
-        text = " ".join(prose(c) for c in u["concepts"])
+        lesson = lessons.get(u["n"], {})
+        opening = [lesson.get("opening", ""), lesson.get("toolkit", "")]
+        closing = lesson.get("closing", {})
+        closing_parts = [closing.get("teach", ""), closing.get("problem", {}).get("q", ""), closing.get("problem", {}).get("answer", "")]
+        text = " ".join(opening + closing_parts + [prose(c, lesson.get("concepts", {}).get(c["id"])) for c in u["concepts"]])
         words = re.findall(r"[A-Za-z][A-Za-z'-]*", text)
         sentences = max(1, len(re.findall(r"[.!?]+", text)))
         syl = sum(syllables(w) for w in words)

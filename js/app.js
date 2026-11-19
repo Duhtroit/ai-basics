@@ -3,6 +3,8 @@
   'use strict';
 
   var A = window.AIM, K = A.kit, el = K.el;
+  A.teach = A.teach || {};
+  A.registerTeach = function (t) { if (t && t.n) A.teach[t.n] = t; };
   var main = document.getElementById('main');
   var railNav = document.getElementById('railNav');
   var rail = document.getElementById('rail');
@@ -115,7 +117,7 @@
   function ensureUnit(n) {
     var m = meta(n);
     if (!m) return Promise.reject(new Error('Unknown unit ' + n));
-    return Promise.all(['js/scenes.js', 'js/widgets/connections.js', m.file, m.widget].concat(m.extraWidgets || []).map(loadScript));
+    return Promise.all(['js/scenes.js', 'js/widgets/connections.js', m.file, m.widget, m.teach].filter(Boolean).concat(m.extraWidgets || []).map(loadScript));
   }
   function ensureAllContent() {
     return Promise.all(metas().map(function (m) { return loadScript(m.file); }));
@@ -137,7 +139,8 @@
     try {
       if (parts[0] === 'unit' && parts[1]) {
         var n = parseInt(parts[1], 10);
-        if (parts[2] === 'c' && parts[3]) focus = parts[3];
+        if (parts[2] === 'c' && parts[3]) focus = 'c-' + parts[3];
+        else if (parts[2]) focus = { lesson: 'lesson', close: 'put-it-together' }[parts[2]] || null;
         await ensureUnit(n);
         if (token !== routeToken) return;
         renderUnit(n, focus);
@@ -161,6 +164,10 @@
       if (window.console) console.error(e);
     }
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+    if (focus) {
+      var target = document.getElementById(focus);
+      if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
     updateChrome();
   }
 
@@ -381,8 +388,71 @@
     return wrap;
   }
 
+  function practiceBlock(p) {
+    var wrap = el('div', { class: 'practice' });
+    wrap.appendChild(el('p', { class: 'practice-q', text: p.q }));
+    if (p.hint) wrap.appendChild(el('details', { class: 'practice-reveal' },
+      el('summary', { text: 'A hint' }), el('p', { text: p.hint })));
+    wrap.appendChild(el('details', { class: 'practice-reveal' },
+      el('summary', { text: 'Show the worked answer' }),
+      el('div', { class: 'prose practice-a', html: p.answer })));
+    return wrap;
+  }
+
+  function lessonIntro(u, lesson) {
+    var prev = meta(u.n - 1);
+    var sec = el('section', { class: 'lesson-intro', id: 'lesson' });
+    if (prev) sec.appendChild(el('a', {
+      class: 'lesson-back',
+      href: '#/unit/' + prev.n + '/close'
+    }, 'Previous unit: ' + prev.title));
+    sec.appendChild(el('div', { class: 'lesson-flag' },
+      el('span', { class: 'kicker', text: 'Guided lesson' }),
+      el('span', { class: 'note', text: 'Read this in order. The labs sit where the idea needs them.' })));
+    sec.appendChild(el('div', { class: 'prose lesson-prose', html: lesson.opening }));
+    if (lesson.toolkit) sec.appendChild(el('div', { class: 'toolkit' },
+      el('h3', { text: 'The toolkit you need' }),
+      el('div', { class: 'prose', html: lesson.toolkit })));
+    if (u.concepts.length) sec.appendChild(el('a', {
+      class: 'btn small lesson-start',
+      href: '#/unit/' + u.n + '/c/' + u.concepts[0].id
+    }, 'Begin lesson 01: ' + u.concepts[0].title));
+    return sec;
+  }
+
+  /* One shape for every step link, so lesson, concept and synthesis navigation
+     cannot drift apart. */
+  function stepLink(step, cls) {
+    return el('a', { class: cls, href: step.href },
+      el('span', { class: 'k', text: step.kicker }), el('span', { class: 't', text: step.title }));
+  }
+
+  function lessonNext(prev, next) {
+    return el('nav', { class: 'lesson-next', 'aria-label': 'Lesson navigation' },
+      prev ? stepLink(prev, 'prev') : el('span'),
+      next ? stepLink(next, 'next') : el('span'));
+  }
+
+  function lessonClose(lesson, u) {
+    var last = u.concepts[u.concepts.length - 1];
+    var next = meta(u.n + 1);
+    var sec = el('section', { class: 'lesson-close', id: 'put-it-together' },
+      el('div', { class: 'lesson-flag' }, el('span', { class: 'kicker', text: 'Put it together' })),
+      el('div', { class: 'prose lesson-prose', html: lesson.teach }));
+    if (lesson.problem) sec.appendChild(practiceBlock(lesson.problem));
+    sec.appendChild(lessonNext(
+      { href: '#/unit/' + u.n + '/c/' + last.id, kicker: 'Previous lesson', title: last.title },
+      next
+        ? { href: '#/unit/' + next.n + '/lesson', kicker: 'Next unit', title: next.title }
+        : { href: '#/exam', kicker: 'Finish', title: 'Final exam' }
+    ));
+    return sec;
+  }
+
   function conceptSection(u, c, idx) {
     var scene = A.scenes && A.scenes[c.id];
+    var lesson = A.teach && A.teach[u.n];
+    var t = lesson && lesson.concepts && lesson.concepts[c.id];
     var sec = el('section', { class: 'concept', id: 'c-' + c.id, dataset: { concept: c.id }, style: { '--h': u.hue } });
     if (scene) {
       var hue = scene.hue == null ? u.hue : scene.hue;
@@ -424,8 +494,12 @@
     // The scene is rung 1. Where a scene exists it replaces the generic first lab.
     if (!scene) sec.appendChild(lab(Object.assign({ widget: c.metaphor.widget, mode: 'rung1', modeLabel: 'Metaphor' }, c.metaphor.lab), 'Rung 1, the metaphor'));
 
-    // 3 idea
-    sec.appendChild(block(3, 'The idea', el('div', { class: 'prose', html: c.idea })));
+    // 3 teaching
+    if (t && t.teach) {
+      sec.appendChild(block(3, 'Teaching', el('div', { class: 'prose teach', html: t.teach })));
+    } else {
+      sec.appendChild(block(3, 'The idea', el('div', { class: 'prose', html: c.idea })));
+    }
 
     // 4 lecture
     sec.appendChild(block(4, 'From the lecture', el('div', { class: 'lecture' },
@@ -443,7 +517,7 @@
     sec.appendChild(block(5, 'Mechanics', el('div', { class: 'mechanics' },
       el('div', { class: 'formula', html: c.mechanics.formula }),
       symbols,
-      el('div', { class: 'worked', html: c.mechanics.worked }))));
+      el('div', { class: 'worked', html: (t && t.work) || c.mechanics.worked }))));
 
     // 6 rung 2
     if (c.mechanism) sec.appendChild(lab(Object.assign({ widget: c.mechanism.widget, mode: 'rung2', modeLabel: 'Mechanism' }, c.mechanism.lab), 'Rung 2, the mechanism'));
@@ -455,18 +529,32 @@
     sec.appendChild(block(c.sandbox ? 8 : 7, 'Where it breaks', el('div', { class: 'breaks' },
       el('p', { text: c.breaks }))));
 
-    // 9 check
-    sec.appendChild(block(c.sandbox ? 9 : 8, 'Knowledge check', checkBlock(c)));
+    // 9 your turn
+    if (t && t.practice) sec.appendChild(block(c.sandbox ? 9 : 8, 'Your turn', practiceBlock(t.practice)));
 
-    // 10 connection
-    sec.appendChild(block(c.sandbox ? 10 : 9, 'Connection', connectionCard(c.connection)));
+    // 10 check
+    sec.appendChild(block(c.sandbox ? 10 : 9, 'Knowledge check', checkBlock(c)));
 
-    // 11 recap
-    sec.appendChild(block(c.sandbox ? 11 : 10, 'Recap', el('div', {},
+    // 11 connection
+    sec.appendChild(block(c.sandbox ? 11 : 10, 'Connection', connectionCard(c.connection)));
+
+    // 12 summary
+    sec.appendChild(block(c.sandbox ? 12 : 11, 'Carry this forward', el('div', {},
       el('div', { class: 'recap' }, c.recap.map(function (r, i) {
         return el('div', {}, el('span', { class: 'n', text: String(i + 1).padStart(2, '0') }), el('p', { text: r }));
       })),
-      el('p', { class: 'note', text: c.now }))));
+      el('p', { class: 'note', text: c.now }),
+      t && t.bridge ? el('p', { class: 'bridge-line', text: t.bridge }) : null)));
+
+    var prevC = u.concepts[idx - 1], nextC = u.concepts[idx + 1];
+    sec.appendChild(lessonNext(
+      prevC
+        ? { href: '#/unit/' + u.n + '/c/' + prevC.id, kicker: 'Previous lesson', title: prevC.title }
+        : { href: '#/unit/' + u.n + '/lesson', kicker: 'Unit opening', title: 'Start of the unit' },
+      nextC
+        ? { href: '#/unit/' + u.n + '/c/' + nextC.id, kicker: 'Next lesson', title: nextC.title }
+        : { href: '#/unit/' + u.n + '/close', kicker: 'Put it together', title: 'The unit synthesis' }
+    ));
 
     return sec;
   }
@@ -490,15 +578,27 @@
         el('span', { text: u.lectures.length + ' lectures' }),
         el('span', { text: u.concepts.reduce(function (a, c) { return a + (c.mechanism ? 1 : 0) + (c.sandbox ? 1 : 0) + 1 + (A.scenes && A.scenes[c.id] ? 1 : 0); }, 0) + ' interactions' }))));
 
+    var lesson = A.teach && A.teach[u.n];
+    if (lesson && lesson.opening) page.appendChild(lessonIntro(u, lesson));
+
     var contents = el('nav', { class: 'unit-contents', 'aria-label': 'Unit contents' });
+    if (lesson && lesson.opening) contents.appendChild(el('a', { href: '#/unit/' + u.n + '/lesson' },
+      el('span', { class: 'n', text: '00' }),
+      el('span', { class: 't', text: 'Opening lesson' })));
     u.concepts.forEach(function (c, i) {
       contents.appendChild(el('a', { href: '#/unit/' + u.n + '/c/' + c.id },
         el('span', { class: 'n', text: String(i + 1).padStart(2, '0') }),
         el('span', { class: 't', text: c.title })));
     });
+
+    if (lesson && lesson.closing) contents.appendChild(el('a', { href: '#/unit/' + u.n + '/close' },
+      el('span', { class: 'n', text: 'END' }),
+      el('span', { class: 't', text: 'Put it together' })));
     page.appendChild(contents);
 
     u.concepts.forEach(function (c, i) { page.appendChild(conceptSection(u, c, i)); });
+
+    if (lesson && lesson.closing) page.appendChild(lessonClose(lesson.closing, u));
 
     // unit test
     page.appendChild(unitTest(u));
@@ -529,10 +629,6 @@
 
     K.clear(main).appendChild(page);
     mountWidgets(page);
-    if (focus) {
-      var target = document.getElementById('c-' + focus);
-      if (target) requestAnimationFrame(function () { target.scrollIntoView({ block: 'start' }); });
-    }
   }
 
   function unitTest(u) {
@@ -730,11 +826,12 @@
     var page = el('div', { class: 'page cover' });
     page.appendChild(el('div', { class: 'cover-meta' },
       el('span', { class: 'kicker', text: 'AI Basics' }),
+      el('span', { class: 'kicker', text: 'Artificial intelligence methods' }),
       el('span', { class: 'kicker', text: '11 units, 21 hours of lectures' })));
     page.appendChild(el('h1', {},
       el('span', { text: 'The whole course,' }),
       el('span', { class: 'thin', text: 'something you can operate.' })));
-    page.appendChild(el('p', { class: 'cover-lede', text: 'Every concept opens with a situation where you need it, then a metaphor you can play with. The machinery arrives after you have a feel for it. Checks, unit tests, a final exam and a review queue track what you actually know.' }));
+    page.appendChild(el('p', { class: 'cover-lede', text: 'Each unit is a guided lesson. It starts with the problem the ideas solve, teaches every concept with an explanation and a worked example, and gives you a scene to operate before the formal machinery. A short problem and a knowledge check close each concept; unit tests and a review queue track what you know.' }));
 
     page.appendChild(el('div', { class: 'cover-actions' },
       el('a', { class: 'btn', href: '#/unit/' + nextU.n }, c.done ? 'Continue' : 'Start unit 01'),
@@ -908,7 +1005,8 @@
     var page = el('div', { class: 'page' });
     page.appendChild(el('header', { class: 'review-head' },
       el('h1', { text: 'Final exam' }),
-      el('p', { text: 'Forty questions sampled across the eleven units, plus three connection tasks. Closed book. Your score is stored in this browser.' })));
+      el('p', { text: 'Forty questions sampled across the eleven units, plus three connection tasks. Closed book. Your score is stored in this browser.' }),
+      el('p', { class: 'note' }, el('a', { href: '#/unit/11/close', text: 'Back to the final lesson' }), '  ', el('a', { href: '#/', text: 'Course map' }))));
 
     var shell = el('div', { class: 'exam-shell' });
     var exam = buildExam();

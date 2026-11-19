@@ -1,6 +1,6 @@
 /* Measure the gzipped weight a visitor downloads.
    Shell is index, CSS, kit, app, glossary, manifest and the three fonts.
-   A unit page adds scenes, the map widget and that unit's prose and widgets.
+   A unit page adds scenes, the map widget, that unit's prose, widgets and teaching file.
    Also reports the home page and the all-content review/exam page.
 
      node scripts/measure_size.mjs
@@ -22,7 +22,7 @@ const shellFiles = ['index.html', 'css/course.css', 'js/kit.js', 'js/app.js', 'c
 const shell = shellFiles.reduce((n, f) => n + gz(f), 0);
 const shared = ['js/scenes.js', 'js/widgets/connections.js'];
 const units = manifest.map(m => {
-  const bytes = [...shellFiles, ...shared, m.file, m.widget, ...(m.extraWidgets || [])].reduce((n, f) => n + gz(f), 0);
+  const bytes = [...shellFiles, ...shared, m.file, m.teach, m.widget, ...(m.extraWidgets || [])].reduce((n, f) => n + gz(f), 0);
   return { n: m.n, short: m.short, bytes, kb: kb(bytes) };
 });
 const heaviest = units.reduce((a, b) => (a.bytes >= b.bytes ? a : b));

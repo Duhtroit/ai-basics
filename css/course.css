@@ -38,6 +38,7 @@
   --t-slow:240ms;
   --s1:8px;--s2:16px;--s3:24px;--s4:32px;--s5:48px;--s6:64px;--s7:96px;
   --measure:66ch;
+  --pad:clamp(20px,4vw,56px);
   --shadow:0 14px 34px rgba(14,17,22,.18),0 2px 6px rgba(14,17,22,.12);
 }
 
@@ -113,7 +114,9 @@ ul,ol{padding:0}
 
 /* ---------- page frame ---------- */
 main{min-width:0}
-.page{max-width:1060px;padding:0 clamp(20px,4vw,56px) var(--s7)}
+/* One column. Every surface in a lesson (prose, panels, scenes, labs, checks,
+   tests) shares this right edge, so a page never steps in and out in width. */
+.page{max-width:calc(var(--measure) + var(--pad) * 2);margin-inline:auto;padding:0 var(--pad) var(--s7)}
 .narrow{max-width:var(--measure)}
 
 /* ---------- cover ---------- */
@@ -168,11 +171,52 @@ main{min-width:0}
 .unit-head .promise{max-width:60ch;margin-top:var(--s2);font-size:clamp(1rem,1.4vw,1.12rem);color:var(--ink-2)}
 .unit-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:var(--s3)}
 .unit-meta span{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-.unit-contents{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;border-bottom:1px solid var(--rule)}
+.unit-contents{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0;border-bottom:1px solid var(--rule)}
 .unit-contents a{background:var(--paper);padding:14px 16px;text-decoration:none;display:flex;gap:10px;align-items:baseline;border-top:1px solid var(--rule);border-right:1px solid var(--rule)}
 .unit-contents a:hover{background:var(--paper-2)}
-.unit-contents .n{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.unit-contents .n{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:26px}
 .unit-contents .t{font-size:13px}
+.lesson-back{display:inline-flex;align-items:center;min-height:44px;margin-bottom:12px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.lesson-back:hover{color:var(--ink)}
+.lesson-start{margin-top:var(--s4);min-height:44px}
+.lesson-next{display:flex;justify-content:space-between;gap:16px;margin-top:var(--s4);padding-top:16px;border-top:1px solid var(--rule);max-width:var(--measure)}
+.lesson-next a{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:44px;text-decoration:none;max-width:48%}
+.lesson-next a.next{text-align:right;margin-left:auto}
+.lesson-next .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.lesson-next .t{font-family:var(--serif);font-size:1.05rem;line-height:1.25}
+.lesson-next a:hover .t{text-decoration:underline;text-underline-offset:4px}
+
+/* ---------- guided lesson ---------- */
+.lesson-intro{padding:clamp(28px,4vw,44px) 0 var(--s4);border-bottom:1px solid var(--rule);max-width:var(--measure);scroll-margin-top:80px}
+.lesson-flag{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;margin-bottom:18px}
+.lesson-flag .kicker{color:var(--accent-ink)}
+.lesson-flag .note{font-size:12px;color:var(--muted)}
+.lesson-prose{font-size:1.075rem}
+.lesson-prose p+p{margin-top:.8em}
+.toolkit{margin-top:var(--s3);padding:24px;background:var(--paper-2);border:1px solid var(--rule)}
+.toolkit h3{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:12px}
+.toolkit .prose{font-size:1rem}
+.teach h4{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-ink);margin:1.5em 0 .45em}
+.teach h4:first-child{margin-top:0}
+.teach .derive{margin:1em 0;padding:16px 18px;background:var(--paper-2);border-left:2px solid var(--accent);font-size:.98rem}
+.teach .derive p+p{margin-top:.55em}
+.teach .callout{margin:1em 0;padding:14px 16px;border:1px solid var(--rule-strong);font-size:.98rem}
+.teach .callout b{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--accent-ink)}
+.steps{margin:.7em 0 0 1.1em;display:flex;flex-direction:column;gap:.55em;font-size:13.5px;line-height:1.55;color:var(--ink-2)}
+.steps li::marker{font-family:var(--mono);font-size:11px;color:var(--accent-ink)}
+.steps b{color:var(--ink);font-weight:600}
+.practice{background:var(--paper-2);border:1px solid var(--rule);padding:20px 22px}
+.practice-q{font-family:var(--serif);font-size:1.08rem;line-height:1.55;margin-bottom:14px}
+.practice-reveal{border-top:1px solid var(--rule)}
+.practice-reveal summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);list-style:none}
+.practice-reveal summary::-webkit-details-marker{display:none}
+.practice-reveal summary::before{content:"+";display:inline-block;width:18px;font-size:14px;color:var(--muted)}
+.practice-reveal[open] summary::before{content:"\2212"}
+.practice-reveal p,.practice-a{padding:0 0 14px 18px;font-size:14px;line-height:1.6;color:var(--ink-2)}
+.practice-a{font-family:var(--serif);font-size:1.02rem}
+.practice-a p+p{margin-top:.6em}
+.bridge-line{margin-top:16px;padding-top:12px;border-top:1px solid var(--rule);font-family:var(--serif);font-size:1rem;line-height:1.6;color:var(--ink-2)}
+.lesson-close{scroll-margin-top:80px;margin:var(--s6) 0 0;padding:clamp(28px,4vw,40px) 0 var(--s5);border-top:1px solid var(--ink);max-width:var(--measure)}
 
 /* ---------- concept ---------- */
 .concept{padding:var(--s6) 0;border-bottom:1px solid var(--rule);scroll-margin-top:80px}
@@ -279,14 +323,14 @@ main{min-width:0}
 .btn-dark:disabled{opacity:.35;cursor:not-allowed}
 .btn-dark.icon{padding:0;width:40px}
 .btn-dark svg{width:14px;height:14px}
-.seg{display:inline-flex;border:1px solid var(--lab-rule);border-radius:2px;overflow:hidden}
-.seg button{min-height:44px;padding:0 14px;border:0;border-right:1px solid var(--lab-rule);background:transparent;color:var(--lab-muted);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.seg{display:flex;flex-wrap:nowrap;max-width:100%;border:1px solid var(--lab-rule);border-radius:2px;overflow:hidden}
+.seg button{flex:1 1 auto;min-width:0;min-height:44px;padding:0 14px;border:0;border-right:1px solid var(--lab-rule);background:transparent;color:var(--lab-muted);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:rgba(237,232,221,.1);color:var(--lab-ink)}
 .seg button:hover{color:var(--lab-ink)}
 
 input[type="range"]{
-  -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;cursor:pointer;
+  -webkit-appearance:none;appearance:none;width:100%;height:44px;margin:0;background:transparent;cursor:pointer;
 }
 input[type="range"]::-webkit-slider-runnable-track{height:2px;background:rgba(237,232,221,.24)}
 input[type="range"]::-moz-range-track{height:2px;background:rgba(237,232,221,.24)}
@@ -536,6 +580,8 @@ input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset
   .ms-beats{padding:10px 14px 0}
   .ms-controls{padding:10px 14px 16px}
   .ms-act,.ms-ctrl{flex:1 1 auto;padding:0 10px}
+  .seg button{padding:0 9px;font-size:9.5px;letter-spacing:.03em}
+  .field.wide{flex:1 1 100%}
   .ms-meter{margin:0 14px 2px}
 }
 @media (max-width:480px){

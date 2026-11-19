@@ -31,6 +31,8 @@ const entries = data.units.sort((a, b) => a.n - b.n).map(u => {
     ['metaphor', 'mechanism', 'sandbox'].map(k => c[k] && c[k].widget).filter(Boolean)
   ), []);
   const extraWidgets = Array.from(new Set(ids.map(id => widgetOwner[id]).filter(f => f && f !== own))).sort();
+  const teach = 'content/teach/' + nn + '.js';
+  if (!statSync(path.join(root, teach), { throwIfNoEntry: false })) throw new Error(`unit ${u.n}: missing teaching file`);
   return {
     n: u.n,
     hue: u.hue,
@@ -43,6 +45,7 @@ const entries = data.units.sort((a, b) => a.n - b.n).map(u => {
     interactions: u.concepts.reduce((n, c) => n + 2 + (c.mechanism ? 1 : 0) + (c.sandbox ? 1 : 0), 0),
     concepts: u.concepts.map(c => ({ id: c.id, title: c.title, checks: c.check.length })),
     file: 'content/units/' + file,
+    teach,
     widget: own,
     extraWidgets
   };

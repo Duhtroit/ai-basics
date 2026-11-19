@@ -316,6 +316,15 @@ window.AIM = window.AIM || {};
     return pad;
   }
 
+  /* Chart ink stays inside the plot frame: save, clip to the axes rectangle,
+     and the caller restores once the data layer is drawn. */
+  function clipPlot(ctx, pad, w, h) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.l, pad.t, Math.max(0, w - pad.l - pad.r), Math.max(0, h - pad.t - pad.b));
+    ctx.clip();
+  }
+
   function niceTicks(min, max, count) {
     var span = max - min || 1;
     var step = Math.pow(10, Math.floor(Math.log(span / count) / Math.LN10));
@@ -360,6 +369,6 @@ window.AIM = window.AIM || {};
     el: el, svg: svg, clear: clear, clamp: clamp, lerp: lerp, fmt: fmt, pct: pct, scale: scale,
     seeded: seeded, reduced: reduced, tween: tween, store: store, announce: announce, icon: icon,
     slider: slider, segmented: segmented, button: button, transport: transport, canvas: canvas, plot: plot,
-    axis: axis, niceTicks: niceTicks, onKey: onKey, readout: readout, legend: legend, label: label, dpr: dpr
+    axis: axis, clipPlot: clipPlot, niceTicks: niceTicks, onKey: onKey, readout: readout, legend: legend, label: label, dpr: dpr
   };
 })(window.AIM);

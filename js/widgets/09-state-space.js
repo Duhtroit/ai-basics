@@ -14,7 +14,7 @@
         ['weather', false, 'Not used by any decision.']
       ];
       var st = K.store('w:statebuilder', { on: [true, true, true, false, false] });
-      var cv = K.canvas(host, 2.4, draw);
+      var cv = K.canvas(host, 1.6, draw);
       var row = el('div', { class: 'lab-ui', style: { gap: '6px' } });
       var note = el('p', { class: 'lab-note', style: { 'min-height': '44px' } });
       host.appendChild(row); host.appendChild(note);
@@ -29,7 +29,8 @@
         var on = st.get().on;
         buttons.forEach(function (b, i) { b.classList.toggle('on', on[i]); b.textContent = fields[i][0] + (on[i] ? ' on' : ' off'); });
         var s = cv.size(); if (!s.w) return;
-        var ctx = cv.ctx, w = s.w, h = s.h, N = 6, cell = Math.min(w, h * 1.4) / N, ox = (w - cell * N) / 2, oy = 10;
+        var ctx = cv.ctx, w = s.w, h = s.h, N = 6;
+        var cell = Math.min((w - 20) / N, (h - 30) / N), ox = (w - cell * N) / 2, oy = 8;
         for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) {
           ctx.fillStyle = (r + c) % 2 ? 'rgba(237,232,221,.05)' : 'rgba(237,232,221,.09)';
           ctx.fillRect(ox + c * cell, oy + r * cell, cell, cell);
@@ -44,7 +45,7 @@
         ctx.fillStyle = '#0E1116'; ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'center';
         ctx.fillText('R', ox + 1.5 * cell, oy + 1.5 * cell + 4);
         ctx.fillStyle = 'rgba(145,141,132,.95)'; ctx.textAlign = 'left';
-        ctx.fillText('fuel ' + (on[1] ? '3' : '?') + '   parcels ' + (on[2] ? '0 of 4' : '?'), 10, oy + cell * N + 18);
+        ctx.fillText('fuel ' + (on[1] ? '3' : '?') + '   parcels ' + (on[2] ? '0 of 4' : '?'), ox, oy + cell * N + 16);
         var missing = fields.filter(function (f, i) { return f[1] && !on[i]; });
         note.textContent = missing.length
           ? 'The state is missing ' + missing.map(function (f) { return f[0]; }).join(' and ') + '. The agent cannot finish the task.'

@@ -78,7 +78,7 @@ The delivered course has 60 concept pages across those eleven units. Each concep
 
 - Phase 2 benchmark screens: cover, reading concept and lab, for approval before mass production.
 - Every phase: screenshots at 1440, 1024 and 390; a recording of each new widget; and `scripts/smoke.mjs`, which mounts every widget, asserts a clean console and captures screenshots.
-- Budget: shell under 300KB gzipped, at most 250KB per unit, 60fps on the search and backprop widgets. `scripts/measure_size.mjs` measures the gzipped shell (including the three fonts) and every unit page as loaded, and fails the gate if either limit is missed. The delivered shell is 140.6KB and the heaviest unit page is 189.6KB.
+- Budget: shell under 300KB gzipped, at most 250KB per unit, 60fps on the search and backprop widgets. `scripts/measure_size.mjs` measures the gzipped shell (including the three fonts) and every unit page as loaded, and fails the gate if either limit is missed. The delivered shell is 142.6KB and the heaviest unit page is 201.8KB.
 - Fonts: three local woff2 subsets under 120KB total, with no remote font, stylesheet or script request. The smoke run fails on any cross-origin request and requires exactly three local woff2 files.
 - Reduced motion: every timed control presents its final state and numeric trace immediately. The smoke run checks the search, backprop, descent and scene controls with `prefers-reduced-motion: reduce`, and checks the CSS transition duration.
 - State: the smoke run requires the search and backprop widgets to restore their step after navigating away and back, and to return to zero on reset. Scene state restoration, reset and play are checked separately.
@@ -93,3 +93,16 @@ The delivered course has 60 concept pages across those eleven units. Each concep
 - The content linter enforces exactly one scene per concept, no orphan scenes, every unit test format, valid numeric and ordering answers, and three well-formed same-or-different pairs per unit.
 - The smoke gate now renders and answers all 11 unit tests at 1440, requires 12 of 12 correct on each, and grades every same-or-different pair.
 - Counts and current evidence are refreshed in `BUILD_REPORT.md`; artifact paths are listed in `README.md`.
+
+## 9. Guided teaching layer
+
+The course is not a set of reference cards. Every unit is a lesson that teaches its material in order.
+
+- Each `content/teach/NN.js` carries a unit opening, an optional toolkit, a teaching entry for every concept, and a closing synthesis with a multi-concept problem and worked answer.
+- A concept entry has a full explanation (at least 180 words), a step-by-step worked example, a "your turn" problem with a hint and worked answer, and a bridge to the next concept.
+- The renderer places the teaching after the concept scene and mapping, uses the worked example in the mechanics block, adds practice before the knowledge check, and places the closing before the unit test.
+- Lesson routes are `#/unit/N/lesson`, `#/unit/N/c/<concept-id>` and `#/unit/N/close`. Unit contents link every section; each concept has previous and next links; the synthesis hands off to the next unit, and unit 11 hands off to the exam. A deep link scrolls to its anchor after render and survives reload.
+- Unit 1 includes the math and Python toolkit assumed by the lectures. Unit 2 adds the generalisation vocabulary. Later units build on those foundations instead of recapping them.
+- The teaching layer adds 30,871 words; the course now has 49,342 words of prose across framing, teaching, examples, practice and reference material.
+- The linter loads every teaching file, requires one entry per concept in unit order, and fails on a missing field or a teaching block under 180 words. The manifest and size gate include each unit's teaching file.
+- The heaviest unit page is 201.5 KB gzipped after the addition, under the 250 KB limit.

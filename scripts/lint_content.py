@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Content checks for the AI Basics course.
 
-Checks: field completeness, prerequisite order, glossary first use, widget
-registration, formula symbols, local asset paths, em dashes, curly quotes and
-a short unslop phrase list. Exits non-zero on errors.
+Checks: field completeness, prerequisite order, glossary first use, guided
+lesson coverage, widget registration, formula symbols, local asset paths, em
+dashes, curly quotes and a short unslop phrase list. Exits non-zero on errors.
 """
 import json
 import os
@@ -209,12 +209,61 @@ def main():
         for c, mc in zip(u["concepts"], m["concepts"]):
             if mc.get("id") != c["id"] or mc.get("title") != c["title"] or mc.get("checks") != len(c.get("check", [])):
                 fail(f"content/manifest.js: unit {u['n']} concept {c['id']} is stale")
-        for key in ("file", "widget"):
+        for key in ("file", "teach", "widget"):
             if not os.path.exists(os.path.join(ROOT, m.get(key, ""))):
                 fail(f"content/manifest.js: missing {key} for unit {u['n']}")
         for extra in m.get("extraWidgets", []):
             if not os.path.exists(os.path.join(ROOT, extra)):
                 fail(f"content/manifest.js: missing extra widget {extra} for unit {u['n']}")
+
+    # guided lessons cover every concept, in order, with a full teaching block
+    try:
+        teach_out = subprocess.run(
+            ["node", os.path.join(ROOT, "scripts", "extract_teach.mjs")],
+            capture_output=True, text=True, check=True
+        )
+        lessons = json.loads(teach_out.stdout).get("lessons", [])
+    except (subprocess.CalledProcessError, ValueError) as exc:
+        lessons = []
+        fail(f"content/teach: cannot load lessons ({exc})")
+    lesson_by_unit = {lesson.get("n"): lesson for lesson in lessons}
+    if len(lesson_by_unit) != len(units):
+        fail(f"content/teach: {len(lesson_by_unit)} lessons, expected {len(units)}")
+
+    def word_count(text):
+        text = re.sub(r"<[^>]+>", " ", text or "")
+        text = re.sub(r"&[a-z]+;", " ", text)
+        return len(re.findall(r"\S+", text))
+
+    for u in units:
+        lesson = lesson_by_unit.get(u["n"])
+        if not lesson:
+            fail(f"content/teach: missing lesson for unit {u['n']}")
+            continue
+        if not word_count(lesson.get("opening")):
+            fail(f"content/teach/{u['n']}: empty opening")
+        closing = lesson.get("closing", {})
+        if not word_count(closing.get("teach")):
+            fail(f"content/teach/{u['n']}: empty closing teaching")
+        problem = closing.get("problem", {})
+        for key in ("q", "answer"):
+            if not word_count(problem.get(key)):
+                fail(f"content/teach/{u['n']}: closing problem missing {key}")
+        taught = lesson.get("concepts", {})
+        ids = [c["id"] for c in u["concepts"]]
+        if list(taught.keys()) != ids:
+            fail(f"content/teach/{u['n']}: concept coverage does not match the unit order")
+        for cid in ids:
+            entry = taught.get(cid, {})
+            for key in ("teach", "work", "bridge"):
+                if not word_count(entry.get(key)):
+                    fail(f"content/teach/{u['n']}/{cid}: missing {key}")
+            if word_count(entry.get("teach")) < 180:
+                fail(f"content/teach/{u['n']}/{cid}: teaching block under 180 words")
+            practice = entry.get("practice", {})
+            for key in ("q", "answer"):
+                if not word_count(practice.get(key)):
+                    fail(f"content/teach/{u['n']}/{cid}: practice missing {key}")
 
     # glossary first use
     def first_use(term):

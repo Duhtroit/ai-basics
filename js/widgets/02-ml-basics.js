@@ -218,13 +218,13 @@
         var xs = K.scale(x0, 1, pad.l, w - pad.r), ys = K.scale(0, maxY, h - pad.b, pad.t);
         ctx.strokeStyle = 'rgba(237,232,221,.14)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.stroke();
+        K.clipPlot(ctx, pad, w, h);
         ctx.strokeStyle = 'oklch(.7 .13 60)'; ctx.lineWidth = 2;
         ctx.beginPath();
         for (var i = 0; i <= 100; i++) {
           var xv = x0 + (1 - x0) * i / 100;
-          var yv = Math.min(maxY, loss(kind, kind === 'log' ? xv : xv));
-          if (kind === 'log' && xv <= 0) continue;
-          var px = kind === 'log' ? xs(xv) : xs(xv * 2 - 1), py = ys(yv);
+          var yv = Math.min(maxY, loss(kind, xv));
+          var px = xs(xv), py = ys(yv);
           i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
         }
         ctx.stroke();
@@ -232,6 +232,7 @@
         var ey = Math.min(maxY, loss(kind, kind === 'log' ? e : ex));
         ctx.fillStyle = '#EDE8DD';
         ctx.beginPath(); ctx.arc(xs(ex), ys(ey), 5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
         ctx.fillStyle = 'rgba(145,141,132,.95)'; ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
         ctx.fillText(kind === 'log' ? 'predicted probability for a true case' : 'residual', pad.l + 4, 12);
         note.textContent = 'Loss at this point: ' + ey.toFixed(2) + '. ' + (kind === 'mse' ? 'Squaring makes large errors dominate.' : kind === 'mae' ? 'Absolute error counts every unit equally.' : 'A confident wrong probability costs the most.');
