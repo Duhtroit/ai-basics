@@ -1,0 +1,6 @@
+.venv/
+.verify/
+node_modules/
+artifacts/
+screenshots/
+BUILD_REPORT.md

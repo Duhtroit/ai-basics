@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Basics | Interactive course</title>
+<meta name="description" content="A complete interactive course in AI Basics: paradigms, machine learning, neural networks, trees, constraints, probability, search and logic.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/course.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <a class="brand" href="#/" aria-label="Course home">
+    <span class="brand-mark" aria-hidden="true">AI</span>
+    <span class="brand-text">Basics<em>interactive course</em></span>
+  </a>
+  <div class="topbar-right">
+    <span class="topbar-progress" id="topbarProgress">0 of 11 units</span>
+    <button class="icon-btn" id="railToggle" type="button" aria-expanded="false" aria-controls="rail">
+      <span class="sr">Contents</span>
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="rail" id="rail" aria-label="Course contents">
+    <p class="rail-label">Contents</p>
+    <nav id="railNav"></nav>
+    <div class="rail-foot">
+      <a class="rail-link" href="#/review" id="reviewLink">Review queue <span class="pill" id="reviewCount">0</span></a>
+      <a class="rail-link" href="#/exam">Final exam</a>
+      <div class="rail-meter" aria-hidden="true"><span id="railMeterBar"></span></div>
+      <p class="rail-meter-label" id="railMeterLabel">0% complete</p>
+    </div>
+  </aside>
+
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<footer class="site-foot">
+  <p>Built from the lecture recordings and slides. Grounded in Stanford CS221, CS229, Berkeley CS188 and MIT 6.034.</p>
+  <p class="mono">No account. No tracking. Progress stays in this browser.</p>
+</footer>
+
+<noscript><p class="noscript">This course needs JavaScript for its interactions and progress tracking.</p></noscript>
+
+<script src="js/kit.js" defer></script>
+<script src="content/glossary.js" defer></script>
+<script src="content/manifest.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>
