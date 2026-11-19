@@ -1,6 +1,6 @@
 # AI Basics, interactive course
 
-A static course built from the 49 recordings, 39 slide decks and transcripts of AI Basics. Eleven units, sixty concepts, sixty playable metaphor scenes, 64 deeper mechanism and sandbox labs, and 11 unit maps. No framework, no runtime build step, no account, no tracking. A generated manifest lets each unit load only its own prose and widgets.
+A static course built from 49 lecture recordings, 39 slide decks and their transcripts. Eleven units, sixty concepts, sixty playable metaphor scenes, 64 deeper mechanism and sandbox labs, and 11 unit maps. No framework, no runtime build step, no account, no tracking. A generated manifest lets each unit load only its own prose and widgets.
 
 The approved plan and its scene-led revision are recorded in `PLAN.md`.
 
